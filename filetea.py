@@ -50,16 +50,18 @@ def register_file(session_obj, file_to_send):
     file_download_url = '%s%s' % (__FILETEA_URL, send_response_json['result'][0][0])
     return file_download_url
 
-
 base_logger = logging.getLogger('filetea')
 session = requests.session()
 
 if len(sys.argv) < 2:
     sys.exit('Need to specify file to share')
 
-# TODO: Check file exists
 # TODO: Check file mimetype
 file_to_send = sys.argv[1]
+if not os.path.exists(file_to_send):
+    sys.exit('File does not exist.')
+if not os.path.isfile(file_to_send):
+    sys.exit('Path is not a file.')
 
 # Get a peer-id registered with endpoint
 my_uuid = get_peer_id(session)
