@@ -3,6 +3,7 @@ import logging
 import sys
 import os
 import json
+import mimetypes
 
 import requests
 
@@ -35,9 +36,10 @@ def send_file(session_obj, file_name_to_send, token):
 def register_file(session_obj, file_to_send):
     """Register file with endpoint, returns url to use to download the file"""
     logger = logging.getLogger('register_file')
+    mime_type = mimetypes.guess_type(file_to_send)[0] or "application/octet-stream"
     send_url = '%stransport/lp/send?%s' % (__FILETEA_URL, my_uuid)
-    send_data = 'X{"method":"addFileSources","params":[["%s","text/plain",%d]],"id":"1"}' % (
-        file_to_send, os.path.getsize(file_to_send))
+    send_data = 'X{"method":"addFileSources","params":[["%s","%s",%d]],"id":"1"}' % (
+        os.path.basename(file_to_send), mime_type, os.path.getsize(file_to_send))
     logger.info('Sending %s' % send_data)
     sent_response = session_obj.post(send_url, data=send_data, headers={'Content-Type': 'text/plain'})
     logger.debug(sent_response.headers)
@@ -56,7 +58,6 @@ session = requests.session()
 if len(sys.argv) < 2:
     sys.exit('Need to specify file to share')
 
-# TODO: Check file mimetype
 file_to_send = sys.argv[1]
 if not os.path.exists(file_to_send):
     sys.exit('File does not exist.')
