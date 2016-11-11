@@ -3,6 +3,7 @@ import logging
 import sys
 import os
 import json
+import mimetypes
 
 import requests
 
@@ -35,9 +36,10 @@ def send_file(session_obj, file_name_to_send, token):
 def register_file(session_obj, file_to_send):
     """Register file with endpoint, returns url to use to download the file"""
     logger = logging.getLogger('register_file')
+    mime_type = mimetypes.guess_type(file_to_send)[0] or "application/octet-stream"
     send_url = '%stransport/lp/send?%s' % (__FILETEA_URL, my_uuid)
-    send_data = 'X{"method":"addFileSources","params":[["%s","text/plain",%d]],"id":"1"}' % (
-        file_to_send, os.path.getsize(file_to_send))
+    send_data = 'X{"method":"addFileSources","params":[["%s","%s",%d]],"id":"1"}' % (
+        os.path.basename(file_to_send), mime_type, os.path.getsize(file_to_send))
     logger.info('Sending %s' % send_data)
     sent_response = session_obj.post(send_url, data=send_data, headers={'Content-Type': 'text/plain'})
     logger.debug(sent_response.headers)
@@ -50,39 +52,41 @@ def register_file(session_obj, file_to_send):
     file_download_url = '%s%s' % (__FILETEA_URL, send_response_json['result'][0][0])
     return file_download_url
 
+if __name__ == '__main__':
+    base_logger = logging.getLogger('filetea')
+    session = requests.session()
 
-base_logger = logging.getLogger('filetea')
-session = requests.session()
+    if len(sys.argv) < 2:
+        sys.exit('Need to specify file to share')
 
-if len(sys.argv) < 2:
-    sys.exit('Need to specify file to share')
+    file_to_send = sys.argv[1]
+    if not os.path.exists(file_to_send):
+        sys.exit('File does not exist.')
+    if not os.path.isfile(file_to_send):
+        sys.exit('Path is not a file.')
 
-# TODO: Check file exists
-# TODO: Check file mimetype
-file_to_send = sys.argv[1]
+    # Get a peer-id registered with endpoint
+    my_uuid = get_peer_id(session)
+    # Register specified file with endpoint, which returns the URL to download the file
+    url = register_file(session, file_to_send)
+    base_logger.info('URL for file %s: %s' % (file_to_send, url))
+    print 'URL: %s' % url
 
-# Get a peer-id registered with endpoint
-my_uuid = get_peer_id(session)
-# Register specified file with endpoint, which returns the URL to download the file
-url = register_file(session, file_to_send)
-base_logger.info('URL for file %s: %s' % (file_to_send, url))
-print 'URL: %s' % url
+    while True:
+        # Try recv, might 404
+        base_logger.info('Waiting to send recv')
+        recv_url = '%stransport/lp/receive?%s' % (__FILETEA_URL, my_uuid)
+        recv_response = session.get(recv_url)
+        base_logger.debug(recv_response.content)
 
-while True:
-    # Try recv, might 404
-    base_logger.info('Waiting to send recv')
-    recv_url = '%stransport/lp/receive?%s' % (__FILETEA_URL, my_uuid)
-    recv_response = session.get(recv_url)
-    base_logger.debug(recv_response.content)
+        recv_return_data = recv_response.content
+        if recv_return_data.startswith('w'):
+            base_logger.debug('Got file transfer request')
+            recv_return_data = recv_return_data[1:]
 
-    recv_return_data = recv_response.content
-    if recv_return_data.startswith('w'):
-        base_logger.debug('Got file transfer request')
-        recv_return_data = recv_return_data[1:]
+            r = json.loads(recv_return_data)
 
-        r = json.loads(recv_return_data)
-
-        if r['method'] == "fileTransferNew":
-            send_file(session, file_to_send, r['params'][-1])
-    else:
-        base_logger.debug('Not a file transfer')
+            if r['method'] == "fileTransferNew":
+                send_file(session, file_to_send, r['params'][-1])
+        else:
+            base_logger.debug('Not a file transfer')
