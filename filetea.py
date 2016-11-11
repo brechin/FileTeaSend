@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import logging
 import sys
 import os
@@ -70,7 +71,7 @@ if __name__ == '__main__':
     # Register specified file with endpoint, which returns the URL to download the file
     url = register_file(session, file_to_send)
     base_logger.info('URL for file %s: %s' % (file_to_send, url))
-    print 'URL: %s' % url
+    print('URL: %s', url)
 
     while True:
         # Try recv, might 404
