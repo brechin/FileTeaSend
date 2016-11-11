@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import logging
 import sys
 import os
@@ -43,8 +44,8 @@ def register_file(session_obj, file_to_send):
     logger.info('Sending %s' % send_data)
     sent_response = session_obj.post(send_url, data=send_data, headers={'Content-Type': 'text/plain'})
     logger.debug(sent_response.headers)
-    logger.debug(sent_response.content)
-    send_return_data = sent_response.content
+    logger.debug(sent_response.text)
+    send_return_data = sent_response.text
     assert send_return_data.startswith('@')
     send_return_data = send_return_data[1:]
     send_response_json = json.loads(send_return_data)
@@ -70,7 +71,7 @@ if __name__ == '__main__':
     # Register specified file with endpoint, which returns the URL to download the file
     url = register_file(session, file_to_send)
     base_logger.info('URL for file %s: %s' % (file_to_send, url))
-    print 'URL: %s' % url
+    print('URL: %s', url)
 
     while True:
         # Try recv, might 404
