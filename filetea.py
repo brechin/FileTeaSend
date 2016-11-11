@@ -44,8 +44,8 @@ def register_file(session_obj, file_to_send):
     logger.info('Sending %s' % send_data)
     sent_response = session_obj.post(send_url, data=send_data, headers={'Content-Type': 'text/plain'})
     logger.debug(sent_response.headers)
-    logger.debug(sent_response.content)
-    send_return_data = sent_response.content
+    logger.debug(sent_response.text)
+    send_return_data = sent_response.text
     assert send_return_data.startswith('@')
     send_return_data = send_return_data[1:]
     send_response_json = json.loads(send_return_data)
