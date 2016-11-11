@@ -4,9 +4,9 @@ import logging
 import sys
 import os
 import json
-import mimetypes
 
 import requests
+import magic
 
 __FILETEA_URL = 'https://filetea.me/'
 logging.basicConfig(level=logging.DEBUG)
@@ -37,7 +37,10 @@ def send_file(session_obj, file_name_to_send, token):
 def register_file(session_obj, file_to_send):
     """Register file with endpoint, returns url to use to download the file"""
     logger = logging.getLogger('register_file')
-    mime_type = mimetypes.guess_type(file_to_send)[0] or "application/octet-stream"
+    ms = magic.open(magic.MIME_TYPE)
+    ms.load()
+    mime_type = ms.file(file_to_send)
+    ms.close()
     send_url = '%stransport/lp/send?%s' % (__FILETEA_URL, my_uuid)
     send_data = 'X{"method":"addFileSources","params":[["%s","%s",%d]],"id":"1"}' % (
         os.path.basename(file_to_send), mime_type, os.path.getsize(file_to_send))
