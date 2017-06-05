@@ -34,13 +34,10 @@ def send_file(session_obj, file_name_to_send, token):
     return resp
 
 
-def register_file(session_obj, file_to_send):
+def register_file(session_obj, my_uuid, file_to_send):
     """Register file with endpoint, returns url to use to download the file"""
     logger = logging.getLogger('register_file')
-    ms = magic.open(magic.MIME_TYPE)
-    ms.load()
-    mime_type = ms.file(file_to_send)
-    ms.close()
+    mime_type = magic.from_file(file_to_send, mime=True)
     send_url = '%stransport/lp/send?%s' % (__FILETEA_URL, my_uuid)
     send_data = 'X{"method":"addFileSources","params":[["%s","%s",%d]],"id":"1"}' % (
         os.path.basename(file_to_send), mime_type, os.path.getsize(file_to_send))
@@ -56,7 +53,7 @@ def register_file(session_obj, file_to_send):
     file_download_url = '%s%s' % (__FILETEA_URL, send_response_json['result'][0][0])
     return file_download_url
 
-if __name__ == '__main__':
+def main():
     base_logger = logging.getLogger('filetea')
     session = requests.session()
 
@@ -72,9 +69,9 @@ if __name__ == '__main__':
     # Get a peer-id registered with endpoint
     my_uuid = get_peer_id(session)
     # Register specified file with endpoint, which returns the URL to download the file
-    url = register_file(session, file_to_send)
+    url = register_file(session, my_uuid, file_to_send)
     base_logger.info('URL for file %s: %s' % (file_to_send, url))
-    print('URL: %s', url)
+    print('URL: %s' % url)
 
     while True:
         # Try recv, might 404
@@ -84,7 +81,7 @@ if __name__ == '__main__':
         base_logger.debug(recv_response.content)
 
         recv_return_data = recv_response.content
-        if recv_return_data.startswith('w'):
+        if recv_return_data.startswith(b'y'):
             base_logger.debug('Got file transfer request')
             recv_return_data = recv_return_data[1:]
 
