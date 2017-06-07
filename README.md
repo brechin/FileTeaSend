@@ -14,9 +14,13 @@ python setup.py install
 
 ## Run
 
-Simply run `filetea` command with file that you want to share.
+Simply run `filetea` command with `-h` or `--help` to read the help of
+command. It's self explanatory.
 
-If you want to reduce verbose output, edit `fileteasend/app.py` and change
-the line 12 `logging.basicConfig(level=logging.DEBUG)` to
-`logging.basicConfig(level=logging.INFO)` and rerun the setup install. Set
-to `logging.basicConfig(level=logging.ERROR)` for no log output.
+## Options and arguments
+
+You can specify FileTea server with `FILETEAURL` environment variable or
+with `-l` or `--url` arguments.
+
+The `-v` argument enable the verbose mode, you can repeat it to get more
+verbose output.
