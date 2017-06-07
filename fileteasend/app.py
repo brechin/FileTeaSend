@@ -53,7 +53,13 @@ class FileTeaClient(object):
         logger = logging.getLogger('filetea.FileTeaClient.register_file')
         file_name = os.path.basename(file_to_send)
         file_size = os.path.getsize(file_to_send)
-        mime_type = magic.from_file(file_to_send, mime=True)
+        if hasattr(magic, 'open'): # use magic-file-extensions
+            ms = magic.open(magic.MIME_TYPE)
+            ms.load()
+            mime_type = ms.file(file_to_send)
+            ms.close()
+        else: # use python-magic
+            mime_type = magic.from_file(file_to_send, mime=True)
         send_headers = {'Content-Type': 'text/plain'}
         send_url = urljoin(self.url, 'transport/lp/send')
         send_data = {
