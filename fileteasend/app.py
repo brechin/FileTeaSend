@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
 #
@@ -24,7 +23,7 @@ class FileTeaClient(object):
     def __init__(self, url=None):
         logger = logging.getLogger('filetea.FileTeaClient')
         # Set URL to default if not URL is passed
-        self.url = 'https://filetea.me/' if url == None else url
+        self.url = 'https://filetea.me/' if url is None else url
         logger.debug('Using FileTea server {}'.format(self.url))
         self.session = requests.session()
 
@@ -64,8 +63,7 @@ class FileTeaClient(object):
                     mime_type,
                     file_size
                           ]],
-                "id": "1"
-                    }
+                "id": "1" }
         send_data = 'X{}'.format(json.dumps(send_data))
         logger.info('Sending: {}'.format(send_data))
         send_response = self.session.post(send_url, data=send_data, params=peer_id, headers=send_headers)
@@ -151,8 +149,7 @@ def main():
     log_levels = {
             0: logging.ERROR,
             1: logging.INFO,
-            2: logging.DEBUG
-                 }
+            2: logging.DEBUG }
 
     # Maximum loglevel is 2 if user sends more vvv we ignore it
     args.verbose = 2 if args.verbose >= 2 else args.verbose
