@@ -121,6 +121,12 @@ class FileTeaClient(object):
 def exit(signal, frame):
     sys.exit(0)
 
+def copy_to_clipboard(file_url):
+    cmd = "echo {} | xclip -selection c 2>/dev/null".format(file_url)
+    status = os.system(cmd)
+    if os.WEXITSTATUS(status) == 0:
+        print("URL copied to clipboard. Press Ctrl+Shift+V to paste it.")
+
 def run(args):
     logger = logging.getLogger('filetea')
     # Set FileTea server URL
@@ -135,6 +141,7 @@ def run(args):
     file_url = file_tea_client.register_file(peer_id, args.file)
     logger.info('URL for file {}: {}'.format(args.file, file_url))
     print('URL: {}'.format(file_url))
+    copy_to_clipboard(file_url)
     print('Press CTRL+C to stop sharing...')
 
     while True:
